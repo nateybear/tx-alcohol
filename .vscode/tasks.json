@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build workflow",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "snakemake", "--cores", "4", "--rerun-incomplete", "--show-failed-logs"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dry run",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "snakemake", "-n", "--cores", "4"]
+    }
+  ]
+}
