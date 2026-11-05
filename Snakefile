@@ -15,6 +15,7 @@ chains = [
 
 clusterings = {
     "meanshift": clstr.MeanShift(bandwidth=100),
+    "hdbscan": clstr.HDBSCAN(min_cluster_size=2, min_samples=1),
 }
 
 

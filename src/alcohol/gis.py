@@ -68,13 +68,14 @@ def make_map(gdf, clustering):
     gdf["label"] = clustering.labels_.astype(str)
     gdf["cluster_size"] = gdf.groupby("label")["label"].transform("count")
     plot_df = gdf[gdf["cluster_size"] > 1]
+    plot_df = plot_df[plot_df["label"] != "-1"]
     plot_df["share"] = (
         100 * plot_df.groupby("label")["sales"].transform(lambda x: x / x.sum())
     ).round(2)
     plot_df["hhi"] = (
         plot_df.groupby("label")["share"].transform(lambda x: (x**2).sum()).astype(int)
     )
-    m = folium.Map(location=[map_center.y, map_center.x], zoom_start=6)
+    m = folium.Map(location=[map_center.y, map_center.x], zoom_start=6, tiles=None)
     folium.TileLayer(
         tiles=f"https://tiles.stadiamaps.com/tiles/stamen_toner/{{z}}/{{x}}/{{y}}{{r}}.png?api_key={os.environ.get('STADIA_API_KEY')}",
         attr="&copy; Stadia Maps, &copy; OpenMapTiles, &copy; OpenStreetMap contributors",
@@ -84,9 +85,10 @@ def make_map(gdf, clustering):
     min_sales = plot_df.sales.min()
     max_sales = plot_df.sales.max()
     n_clusters = len(set(clustering.labels_))
+    labels_permute = np.random.permutation(n_clusters)
     for _, row in plot_df.iterrows():
         label = int(row["label"])
-        color = cm.hsv(label / n_clusters)
+        color = cm.hsv(labels_permute[label] / n_clusters)
         radius = 5 + 15 * (row["sales"] - min_sales) / (max_sales - min_sales)
         folium.CircleMarker(
             location=[row.geometry.y, row.geometry.x],
@@ -96,7 +98,7 @@ def make_map(gdf, clustering):
             fill=True,
             fill_opacity=0.8,
             weight=1,
-            tooltip=f"{row.location_name}<br>Avg Sales: ${row.sales:.2f}<br>Share: {row['share']}%<br>HHI: {row['hhi']}",
+            tooltip=f"{row.location_name}<br>Cluster: {row['label']}<br>Avg Sales: ${row.sales:.2f}<br>Share: {row['share']}%<br>HHI: {row['hhi']}",
         ).add_to(m)
 
     return m
